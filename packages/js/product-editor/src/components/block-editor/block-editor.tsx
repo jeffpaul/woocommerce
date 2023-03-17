@@ -102,7 +102,13 @@ export function BlockEditor( {
 
 	return (
 		<div className="woocommerce-product-block-editor">
-			<BlockContextProvider value={ { selectedTab } }>
+			<BlockContextProvider
+				value={ {
+					selectedTab,
+					postType: 'product',
+					postId: product.id,
+				} }
+			>
 				<BlockEditorProvider
 					value={ blocks }
 					onInput={ onInput }
