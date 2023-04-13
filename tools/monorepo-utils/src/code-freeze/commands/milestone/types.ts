@@ -3,4 +3,5 @@ export type Options = {
 	dryRun?: boolean;
 	owner?: string;
 	name?: string;
+	milestone?: string;
 };

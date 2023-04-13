@@ -31,29 +31,40 @@ export const milesStoneCommand = new Command( 'milestone' )
 		'Repository name. Default: woocommerce',
 		'woocommerce'
 	)
+	.option( '-m --milestone <milestone>', 'Milestone to create' )
 	.action( async ( options: Options ) => {
-		const { owner, name, dryRun } = options;
-		const versionSpinner = ora( 'Getting latest release version' ).start();
-		const latestReleaseVersion = await getLatestReleaseVersion( options );
-		versionSpinner.succeed();
+		const { owner, name, dryRun, milestone } = options;
+		let nextVersion;
 
-		console.log(
-			chalk.yellow(
-				`The latest release in ${ owner }/${ name } is version: ${ latestReleaseVersion }`
-			)
-		);
+		if ( ! milestone ) {
+			const versionSpinner = ora(
+				'No milestone supplied, getting latest release version'
+			).start();
+			const latestReleaseVersion = await getLatestReleaseVersion(
+				options
+			);
+			versionSpinner.succeed();
 
-		const parsedLatestReleaseVersion = parse( latestReleaseVersion );
-		const nextVersion = inc(
-			latestReleaseVersion,
-			parsedLatestReleaseVersion.minor === 9 ? 'major' : 'minor'
-		);
+			console.log(
+				chalk.yellow(
+					`The latest release in ${ owner }/${ name } is version: ${ latestReleaseVersion }`
+				)
+			);
 
-		console.log(
-			chalk.yellow(
-				`The next release in ${ owner }/${ name } will be version: ${ nextVersion }`
-			)
-		);
+			const parsedLatestReleaseVersion = parse( latestReleaseVersion );
+			nextVersion = inc(
+				latestReleaseVersion,
+				parsedLatestReleaseVersion.minor === 9 ? 'major' : 'minor'
+			);
+
+			console.log(
+				chalk.yellow(
+					`The next release in ${ owner }/${ name } will be version: ${ nextVersion }`
+				)
+			);
+		} else {
+			nextVersion = milestone;
+		}
 
 		const milestoneSpinner = ora(
 			`Creating a ${ nextVersion } milestone`
@@ -77,21 +88,31 @@ export const milesStoneCommand = new Command( 'milestone' )
 					title: nextVersion,
 				}
 			);
-			milestoneSpinner.succeed();
 		} catch ( e ) {
 			console.log(
 				chalk.red(
 					`\nFailed to create milestone ${ nextVersion } in ${ owner }/${ name }`
 				)
 			);
-			e.response.data.errors.forEach( ( error ) => {
-				console.log(
-					chalk.red(
-						`Error in ${ error.field } field with error code `
-					) + chalk.bgRed( error.code )
-				);
-			} );
+			if ( e.response.data.errors ) {
+				e.response.data.errors.forEach( ( error ) => {
+					console.log(
+						chalk.red(
+							`Error in ${ error.field } field with error code `
+						) + chalk.bgRed( error.code )
+					);
+				} );
+			} else {
+				console.log( chalk.red( e.response.data.message ) );
+			}
 
 			process.exit( 1 );
 		}
+
+		milestoneSpinner.succeed();
+		console.log(
+			chalk.green(
+				`Successfully created milestone ${ nextVersion } in ${ owner }/${ name }`
+			)
+		);
 	} );
