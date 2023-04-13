@@ -2,7 +2,7 @@
  * External dependencies
  */
 import { Command } from '@commander-js/extra-typings';
-// import chalk from 'chalk';
+import chalk from 'chalk';
 // import { setOutput } from '@actions/core';
 
 /**
@@ -17,7 +17,22 @@ export const milesStoneCommand = new Command( 'milestone' )
 		'CLI command is used in the Github Actions context.'
 	)
 	.option( '-d --dryRun', 'Prepare the milestone but do not create it.' )
+	.option(
+		'-o --owner <owner>',
+		'Repository owner. Default: woocommerce',
+		'woocommerce'
+	)
+	.option(
+		'-n --name <name>',
+		'Repository name. Default: woocommerce',
+		'woocommerce'
+	)
 	.action( async ( options ) => {
-		const { github, dryRun } = options;
-		const latestReleaseVersion = getLatestReleaseVersion( options );
+		// const { github, dryRun } = options;
+		const latestReleaseVersion = await getLatestReleaseVersion( options );
+		console.log(
+			chalk.yellow(
+				'The latest release version is: ' + latestReleaseVersion
+			)
+		);
 	} );
