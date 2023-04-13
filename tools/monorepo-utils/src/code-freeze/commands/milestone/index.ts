@@ -9,6 +9,7 @@ import chalk from 'chalk';
  * Internal dependencies
  */
 import { getLatestReleaseVersion } from './utils';
+import { Options } from './types';
 
 export const milesStoneCommand = new Command( 'milestone' )
 	.description( 'Create a milestone' )
@@ -27,7 +28,7 @@ export const milesStoneCommand = new Command( 'milestone' )
 		'Repository name. Default: woocommerce',
 		'woocommerce'
 	)
-	.action( async ( options ) => {
+	.action( async ( options: Options ) => {
 		// const { github, dryRun } = options;
 		const latestReleaseVersion = await getLatestReleaseVersion( options );
 		console.log(

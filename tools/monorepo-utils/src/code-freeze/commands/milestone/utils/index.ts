@@ -8,8 +8,11 @@ import { Repository } from '@octokit/graphql-schema';
  * Internal dependencies
  */
 import { graphqlWithAuth } from '../../../../graphQL';
+import { Options } from '..//types';
 
-export const getLatestReleaseVersion = async ( options ) => {
+export const getLatestReleaseVersion = async (
+	options: Options
+): Promise< string > => {
 	const { owner, name } = options;
 
 	const data = await graphqlWithAuth< { repository: Repository } >( `
