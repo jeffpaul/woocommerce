@@ -8,7 +8,7 @@ import { Repository } from '@octokit/graphql-schema';
  * Internal dependencies
  */
 import { graphqlWithAuth } from '../../../../graphQL';
-import { Options } from '..//types';
+import { Options } from '../types';
 
 export const getLatestReleaseVersion = async (
 	options: Options

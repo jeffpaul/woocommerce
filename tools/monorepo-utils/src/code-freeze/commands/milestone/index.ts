@@ -29,11 +29,12 @@ export const milesStoneCommand = new Command( 'milestone' )
 		'woocommerce'
 	)
 	.action( async ( options: Options ) => {
-		// const { github, dryRun } = options;
+		const { owner, name } = options;
 		const latestReleaseVersion = await getLatestReleaseVersion( options );
+
 		console.log(
 			chalk.yellow(
-				'The latest release version is: ' + latestReleaseVersion
+				`The latest release in ${ owner }/${ name } is version: ${ latestReleaseVersion }`
 			)
 		);
 	} );
