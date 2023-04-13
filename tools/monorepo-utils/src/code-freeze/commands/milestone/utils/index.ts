@@ -7,7 +7,7 @@ import { Repository } from '@octokit/graphql-schema';
 /**
  * Internal dependencies
  */
-import { graphqlWithAuth } from '../../../../graphQL';
+import { graphqlWithAuth } from '../../../../github-api';
 import { Options } from '../types';
 
 export const getLatestReleaseVersion = async (

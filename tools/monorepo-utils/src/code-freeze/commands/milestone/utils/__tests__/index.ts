@@ -3,7 +3,7 @@
  */
 import { getLatestReleaseVersion } from '../index';
 
-jest.mock( '../../../../../graphQL', () => {
+jest.mock( '../../../../../github-api', () => {
 	return {
 		graphqlWithAuth: jest.fn().mockResolvedValue( {
 			repository: {
