@@ -2,20 +2,17 @@
  * External dependencies
  */
 import { gt as greaterThan } from 'semver';
+import { Repository } from '@octokit/graphql-schema';
 
 /**
  * Internal dependencies
  */
-import { graphQLRequest, gql } from '../../../../graphQL';
+import { graphqlWithAuth } from '../../../../graphQL';
 
 export const getLatestReleaseVersion = async ( options ) => {
 	const { owner, name } = options;
 
-	// interface RepositoryReleases {
-	// 	repository: { releases: { nodes: { tagName: string }[] } };
-	// }
-
-	const query = gql`
+	const data = await graphqlWithAuth< { repository: Repository } >( `
 			{
 			    repository(owner: "${ owner }", name: "${ name }") {
 					releases(
@@ -28,22 +25,15 @@ export const getLatestReleaseVersion = async ( options ) => {
 					}
 				}
 			}
-		`;
+		` );
 
-	const data = await graphQLRequest( query );
-
-	const tagNames = data.repository.releases.nodes.map(
-		( node ) => node.tagName
-	);
-	const majorMinors = tagNames.filter( ( tagName ) =>
-		/^[\d.]+$/.test( tagName )
-	);
-	const latestRelease = majorMinors.reduce( ( latest, current ) => {
-		if ( greaterThan( current, latest ) ) {
-			return current;
-		}
-		return latest;
-	} );
-
-	return latestRelease;
+	return data.repository.releases.nodes
+		.map( ( node ) => node.tagName )
+		.filter( ( tagName ) =>
+			// Remove any non-numeric and decimal tags, ie prerelease, nightly, and beta tester tags.
+			/^[\d.]+$/.test( tagName )
+		)
+		.reduce( ( latest, current ) =>
+			greaterThan( current, latest ) ? current : latest
+		);
 };
