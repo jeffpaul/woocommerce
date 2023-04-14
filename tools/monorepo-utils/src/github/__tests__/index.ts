@@ -1,9 +1,9 @@
 /**
  * Internal dependencies
  */
-import { getLatestReleaseVersion } from '../index';
+import { getLatestReleaseVersion } from '../repo';
 
-jest.mock( '../../../../../github-api', () => {
+jest.mock( '../api', () => {
 	return {
 		graphqlWithAuth: jest.fn().mockResolvedValue( {
 			repository: {

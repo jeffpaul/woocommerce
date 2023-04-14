@@ -5,13 +5,12 @@ import { Command } from '@commander-js/extra-typings';
 import chalk from 'chalk';
 import { parse, inc } from 'semver';
 import ora from 'ora';
-// import { setOutput } from '@actions/core';
 
 /**
  * Internal dependencies
  */
-import { getLatestReleaseVersion } from './utils';
-import { octokitWithAuth } from '../../../github-api';
+import { getLatestReleaseVersion } from '../../../github/repo';
+import { octokitWithAuth } from '../../../github/api';
 import { Options } from './types';
 
 export const milesStoneCommand = new Command( 'milestone' )
