@@ -31,7 +31,10 @@ export const milesStoneCommand = new Command( 'milestone' )
 		'Repository name. Default: woocommerce',
 		'woocommerce'
 	)
-	.option( '-m --milestone <milestone>', 'Milestone to create' )
+	.option(
+		'-m --milestone <milestone>',
+		'Milestone to create. Next milestone is gathered from Github if none is supplied'
+	)
 	.action( async ( options: Options ) => {
 		const { owner, name, dryRun, milestone } = options;
 		let nextVersion;
@@ -89,24 +92,28 @@ export const milesStoneCommand = new Command( 'milestone' )
 				}
 			);
 		} catch ( e ) {
-			console.log(
-				chalk.red(
-					`\nFailed to create milestone ${ nextVersion } in ${ owner }/${ name }`
-				)
+			const milestoneAlreadyExistsError = e.response.data.errors?.some(
+				( error ) => error.code === 'already_exists'
 			);
-			if ( e.response.data.errors ) {
-				e.response.data.errors.forEach( ( error ) => {
-					console.log(
-						chalk.red(
-							`Error in ${ error.field } field with error code `
-						) + chalk.bgRed( error.code )
-					);
-				} );
-			} else {
-				console.log( chalk.red( e.response.data.message ) );
-			}
 
-			process.exit( 1 );
+			if ( milestoneAlreadyExistsError ) {
+				milestoneSpinner.succeed();
+				console.log(
+					chalk.green(
+						`Milestone ${ nextVersion } already exists in ${ owner }/${ name }`
+					)
+				);
+				process.exit( 0 );
+			} else {
+				milestoneSpinner.fail();
+				console.log(
+					chalk.red(
+						`\nFailed to create milestone ${ nextVersion } in ${ owner }/${ name }`
+					)
+				);
+				console.log( chalk.red( e.response.data.message ) );
+				process.exit( 1 );
+			}
 		}
 
 		milestoneSpinner.succeed();
