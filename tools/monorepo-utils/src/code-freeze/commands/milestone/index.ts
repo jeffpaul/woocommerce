@@ -11,6 +11,7 @@ import ora from 'ora';
  */
 import { getLatestReleaseVersion } from '../../../github/repo';
 import { octokitWithAuth } from '../../../github/api';
+import { WPIncrement } from './utils';
 import { Options } from './types';
 
 export const milesStoneCommand = new Command( 'milestone' )
@@ -36,11 +37,13 @@ export const milesStoneCommand = new Command( 'milestone' )
 	)
 	.action( async ( options: Options ) => {
 		const { owner, name, dryRun, milestone } = options;
-		let nextVersion;
+		let nextMilestone;
 
-		if ( ! milestone ) {
+		if ( milestone ) {
+			nextMilestone = milestone;
+		} else {
 			const versionSpinner = ora(
-				'No milestone supplied, getting latest release version'
+				'No milestone supplied, going off the latest release version'
 			).start();
 			const latestReleaseVersion = await getLatestReleaseVersion(
 				options
@@ -53,30 +56,32 @@ export const milesStoneCommand = new Command( 'milestone' )
 				)
 			);
 
-			const parsedLatestReleaseVersion = parse( latestReleaseVersion );
-			nextVersion = inc(
-				latestReleaseVersion,
-				parsedLatestReleaseVersion.minor === 9 ? 'major' : 'minor'
-			);
+			const nextReleaseVersion = WPIncrement( latestReleaseVersion );
 
 			console.log(
 				chalk.yellow(
-					`The next release in ${ owner }/${ name } will be version: ${ nextVersion }`
+					`The next release in ${ owner }/${ name } will be version: ${ nextReleaseVersion }`
 				)
 			);
-		} else {
-			nextVersion = milestone;
+
+			nextMilestone = WPIncrement( nextReleaseVersion );
+
+			console.log(
+				chalk.yellow(
+					`The next milestone in ${ owner }/${ name } will be: ${ nextMilestone }`
+				)
+			);
 		}
 
 		const milestoneSpinner = ora(
-			`Creating a ${ nextVersion } milestone`
+			`Creating a ${ nextMilestone } milestone`
 		).start();
 
 		if ( dryRun ) {
 			milestoneSpinner.succeed();
 			console.log(
 				chalk.green(
-					`DRY RUN: Skipping actual creation of milestone ${ nextVersion }`
+					`DRY RUN: Skipping actual creation of milestone ${ nextMilestone }`
 				)
 			);
 
@@ -87,7 +92,7 @@ export const milesStoneCommand = new Command( 'milestone' )
 			await octokitWithAuth.request(
 				`POST /repos/${ owner }/${ name }/milestones`,
 				{
-					title: nextVersion,
+					title: nextMilestone,
 				}
 			);
 		} catch ( e ) {
@@ -99,7 +104,7 @@ export const milesStoneCommand = new Command( 'milestone' )
 				milestoneSpinner.succeed();
 				console.log(
 					chalk.green(
-						`Milestone ${ nextVersion } already exists in ${ owner }/${ name }`
+						`Milestone ${ nextMilestone } already exists in ${ owner }/${ name }`
 					)
 				);
 				process.exit( 0 );
@@ -107,7 +112,7 @@ export const milesStoneCommand = new Command( 'milestone' )
 				milestoneSpinner.fail();
 				console.log(
 					chalk.red(
-						`\nFailed to create milestone ${ nextVersion } in ${ owner }/${ name }`
+						`\nFailed to create milestone ${ nextMilestone } in ${ owner }/${ name }`
 					)
 				);
 				console.log( chalk.red( e.response.data.message ) );
@@ -118,7 +123,7 @@ export const milesStoneCommand = new Command( 'milestone' )
 		milestoneSpinner.succeed();
 		console.log(
 			chalk.green(
-				`Successfully created milestone ${ nextVersion } in ${ owner }/${ name }`
+				`Successfully created milestone ${ nextMilestone } in ${ owner }/${ name }`
 			)
 		);
 	} );
