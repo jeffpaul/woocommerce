@@ -10,7 +10,7 @@ import ora from 'ora';
  */
 import { getLatestReleaseVersion } from '../../../github/repo';
 import { octokitWithAuth } from '../../../github/api';
-import { WPIncrement } from './utils';
+import { WPIncrement, setGithubMilestoneOutputs } from './utils';
 import { Options } from './types';
 
 export const milesStoneCommand = new Command( 'milestone' )
@@ -35,10 +35,26 @@ export const milesStoneCommand = new Command( 'milestone' )
 		'Milestone to create. Next milestone is gathered from Github if none is supplied'
 	)
 	.action( async ( options: Options ) => {
-		const { owner, name, dryRun, milestone } = options;
+		const { owner, name, dryRun, milestone, github } = options;
+
+		if ( milestone && github ) {
+			console.log(
+				chalk.red(
+					"You can't manually supply a milestone using Github mode. Please use the CLI locally to add a milestone."
+				)
+			);
+			process.exit( 1 );
+		}
+
 		let nextMilestone;
+		let nextReleaseVersion;
 
 		if ( milestone ) {
+			console.log(
+				chalk.yellow(
+					`Manually creating milestone ${ milestone } in ${ owner }/${ name }`
+				)
+			);
 			nextMilestone = milestone;
 		} else {
 			const versionSpinner = ora(
@@ -49,21 +65,20 @@ export const milesStoneCommand = new Command( 'milestone' )
 			);
 			versionSpinner.succeed();
 
+			nextReleaseVersion = WPIncrement( latestReleaseVersion );
+			nextMilestone = WPIncrement( nextReleaseVersion );
+
 			console.log(
 				chalk.yellow(
 					`The latest release in ${ owner }/${ name } is version: ${ latestReleaseVersion }`
 				)
 			);
 
-			const nextReleaseVersion = WPIncrement( latestReleaseVersion );
-
 			console.log(
 				chalk.yellow(
 					`The next release in ${ owner }/${ name } will be version: ${ nextReleaseVersion }`
 				)
 			);
-
-			nextMilestone = WPIncrement( nextReleaseVersion );
 
 			console.log(
 				chalk.yellow(
@@ -106,6 +121,12 @@ export const milesStoneCommand = new Command( 'milestone' )
 						`Milestone ${ nextMilestone } already exists in ${ owner }/${ name }`
 					)
 				);
+				if ( github ) {
+					setGithubMilestoneOutputs(
+						nextReleaseVersion,
+						nextMilestone
+					);
+				}
 				process.exit( 0 );
 			} else {
 				milestoneSpinner.fail();
@@ -120,6 +141,9 @@ export const milesStoneCommand = new Command( 'milestone' )
 		}
 
 		milestoneSpinner.succeed();
+		if ( github ) {
+			setGithubMilestoneOutputs( nextReleaseVersion, nextMilestone );
+		}
 		console.log(
 			chalk.green(
 				`Successfully created milestone ${ nextMilestone } in ${ owner }/${ name }`
