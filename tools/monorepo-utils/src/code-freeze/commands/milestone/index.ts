@@ -3,7 +3,6 @@
  */
 import { Command } from '@commander-js/extra-typings';
 import chalk from 'chalk';
-import { parse, inc } from 'semver';
 import ora from 'ora';
 
 /**
